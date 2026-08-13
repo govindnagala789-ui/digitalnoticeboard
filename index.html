@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusConnect | College Digital Notice Board</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Top Campus Live Ticker -->
+    <div class="ticker-wrap" id="tickerWrap">
+        <div class="ticker-title">
+            <i class="fa-solid fa-graduation-cap pulse-icon"></i>
+            <span>CAMPUS TICKER</span>
+        </div>
+        <div class="ticker-content" id="tickerContent">
+            <!-- Dynamic urgent campus notices -->
+        </div>
+    </div>
+
+    <!-- College Main Navigation Bar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-university"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>CampusConnect</h1>
+                    <span class="sub-brand"><span class="status-dot"></span> Official College Digital Notice Board</span>
+                </div>
+            </div>
+
+            <!-- Right-Side Auth & Navigation Controls -->
+            <div class="nav-actions">
+                <!-- User Profile Badge when Logged In -->
+                <div class="user-profile-badge hidden" id="userProfileBadge">
+                    <div class="profile-avatar" id="userAvatar">U</div>
+                    <div class="profile-info">
+                        <span class="profile-name" id="userName">User Name</span>
+                        <span class="badge" id="userRoleBadge">Role</span>
+                    </div>
+                    <button class="btn btn-icon btn-logout" onclick="handleLogout()" title="Logout">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+
+                <!-- Admin Only: Post Notice Trigger -->
+                <button class="btn btn-success hidden" id="postNoticeBtn" onclick="openNoticeModal()">
+                    <i class="fa-solid fa-plus-circle"></i> Post New Notice
+                </button>
+
+                <!-- Student / Teacher Login Trigger -->
+                <button class="btn btn-outline" id="userAuthBtn" onclick="openAuthModal('student')">
+                    <i class="fa-solid fa-user"></i> Student / Teacher Login
+                </button>
+
+                <!-- RIGHT-SIDE BLUE ADMIN LOGIN BUTTON -->
+                <button class="btn btn-admin-blue" id="adminAuthBtn" onclick="openAuthModal('admin')">
+                    <i class="fa-solid fa-user-shield"></i> Admin Login
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Campus Dashboard Stats Bar -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="totalNoticesCount">0</span>
+                    <span class="stat-label">Total Notices</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon red">
+                    <i class="fa-solid fa-file-pen"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="examNoticesCount">0</span>
+                    <span class="stat-label">Exam & Academic</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon green">
+                    <i class="fa-solid fa-briefcase"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="placementNoticesCount">0</span>
+                    <span class="stat-label">Placement Drives</span>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon amber">
+                    <i class="fa-solid fa-thumbtack"></i>
+                </div>
+                <div class="stat-info">
+                    <span class="stat-value" id="pinnedNoticesCount">0</span>
+                    <span class="stat-label">Pinned Bulletins</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Search & Department Filters Toolbar -->
+        <section class="controls-card">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Search notices by title, department, exam code, or keyword..." oninput="handleSearchInput()">
+                <button class="clear-search-btn hidden" id="clearSearchBtn" onclick="clearSearch()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="filters-wrapper">
+                <div class="category-pills" id="categoryPills">
+                    <button class="pill active" data-category="all" onclick="setCategoryFilter('all', this)">
+                        <i class="fa-solid fa-layer-group"></i> All Categories
+                    </button>
+                    <button class="pill" data-category="Academic & Exams" onclick="setCategoryFilter('Academic & Exams', this)">
+                        <i class="fa-solid fa-book-bookmark"></i> Academic & Exams
+                    </button>
+                    <button class="pill" data-category="Placements & Internships" onclick="setCategoryFilter('Placements & Internships', this)">
+                        <i class="fa-solid fa-building-user"></i> Placements
+                    </button>
+                    <button class="pill" data-category="Events & Sports" onclick="setCategoryFilter('Events & Sports', this)">
+                        <i class="fa-solid fa-trophy"></i> Events & Sports
+                    </button>
+                    <button class="pill" data-category="Library & Fees" onclick="setCategoryFilter('Library & Fees', this)">
+                        <i class="fa-solid fa-landmark"></i> Library & Fees
+                    </button>
+                    <button class="pill pill-urgent" data-category="Urgent Campus Alerts" onclick="setCategoryFilter('Urgent Campus Alerts', this)">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Urgent Alerts
+                    </button>
+                </div>
+
+                <div class="secondary-filters">
+                    <select id="audienceFilter" class="filter-select" onchange="handleFilterChange()">
+                        <option value="all">All Target Audiences</option>
+                        <option value="All Students">All Students</option>
+                        <option value="Final Year Students">Final Year Students</option>
+                        <option value="CSE Department">CSE Department</option>
+                        <option value="ECE & EEE Dept">ECE & EEE Dept</option>
+                        <option value="Faculty & Staff">Faculty & Staff</option>
+                    </select>
+
+                    <select id="sortBy" class="filter-select" onchange="handleFilterChange()">
+                        <option value="newest">Newest First</option>
+                        <option value="pinned">Pinned First</option>
+                        <option value="views">Most Viewed</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+
+                    <button class="btn btn-secondary-outline btn-sm" onclick="resetAllFilters()" title="Reset Filters">
+                        <i class="fa-solid fa-rotate"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Filter Summary -->
+        <div class="active-filter-indicator hidden" id="filterIndicator">
+            <span>Showing filtered results for: <strong id="filterSummaryText"></strong></span>
+            <button class="link-btn" onclick="resetAllFilters()">Clear Filters</button>
+        </div>
+
+        <!-- Pinned Announcements Section -->
+        <section class="section-wrapper" id="pinnedSection">
+            <div class="section-title">
+                <i class="fa-solid fa-thumbtack pin-icon"></i>
+                <h2>Pinned Campus Announcements</h2>
+            </div>
+            <div class="notice-grid" id="pinnedGrid"></div>
+        </section>
+
+        <!-- Main Notices Grid -->
+        <section class="section-wrapper">
+            <div class="section-header">
+                <div class="section-title">
+                    <i class="fa-solid fa-newspaper"></i>
+                    <h2 id="mainGridTitle">General Campus Notices</h2>
+                </div>
+                <div class="grid-actions">
+                    <button class="btn btn-text" onclick="seedSampleData()">
+                        <i class="fa-solid fa-arrows-rotate"></i> Reset Sample Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state hidden" id="emptyState">
+                <div class="empty-icon">
+                    <i class="fa-regular fa-folder-open"></i>
+                </div>
+                <h3>No College Notices Found</h3>
+                <p>No notices match your current search query or active filter settings.</p>
+                <button class="btn btn-primary" onclick="resetAllFilters()">
+                    <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                </button>
+            </div>
+
+            <div class="notice-grid" id="noticeGrid"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p>&copy; 2026 CampusConnect Digital Notice Board — College Administrative HQ</p>
+            <div class="footer-links">
+                <span class="badge badge-info"><i class="fa-solid fa-mobile-screen-button"></i> Mobile & Chrome Ready</span>
+                <span class="badge badge-success"><i class="fa-solid fa-shield-halved"></i> Admin Restricted Posting</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- AUTHENTICATION & ACCOUNT REGISTRATION MODAL -->
+    <div class="modal-backdrop" id="authModal">
+        <div class="modal-card modal-md">
+            <div class="modal-header">
+                <div class="auth-tabs" id="authTabs">
+                    <button class="auth-tab active" data-tab="student" onclick="switchAuthTab('student')">
+                        <i class="fa-solid fa-user-graduate"></i> Student Login
+                    </button>
+                    <button class="auth-tab" data-tab="teacher" onclick="switchAuthTab('teacher')">
+                        <i class="fa-solid fa-chalkboard-user"></i> Teacher Login
+                    </button>
+                    <button class="auth-tab tab-admin-blue" data-tab="admin" onclick="switchAuthTab('admin')">
+                        <i class="fa-solid fa-user-shield"></i> Admin Login
+                    </button>
+                    <button class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">
+                        <i class="fa-solid fa-user-plus"></i> Create Account
+                    </button>
+                </div>
+                <button class="close-modal-btn" onclick="closeAuthModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <!-- STUDENT LOGIN FORM -->
+                <form id="studentLoginForm" class="auth-form" onsubmit="handleLogin(event, 'student')">
+                    <h4 class="form-section-title">Student Portal Login</h4>
+                    <p class="form-subtitle">Access your department announcements and exam schedules.</p>
+                    
+                    <div class="form-group">
+                        <label for="studentUserId">Student Roll No / User ID</label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-id-card input-icon"></i>
+                            <input type="text" id="studentUserId" class="form-input" placeholder="e.g. STU101" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="studentPassword">Password</label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="studentPassword" class="form-input" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    <span class="auth-hint">Demo Student Credentials: User ID: <code class="code-badge">STU101</code> | Password: <code class="code-badge">pass123</code></span>
+                    
+                    <div class="modal-footer border-0 px-0 pb-0">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login as Student
+                        </button>
+                    </div>
+                </form>
+
+                <!-- TEACHER LOGIN FORM -->
+                <form id="teacherLoginForm" class="auth-form hidden" onsubmit="handleLogin(event, 'teacher')">
+                    <h4 class="form-section-title">Teacher & Faculty Login</h4>
+                    <p class="form-subtitle">Access academic circulars and staff notices.</p>
+                    
+                    <div class="form-group">
+                        <label for="teacherUserId">Faculty Employee ID / User ID</label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-id-badge input-icon"></i>
+                            <input type="text" id="teacherUserId" class="form-input" placeholder="e.g. TCH201" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="teacherPassword">Password</label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-lock input-icon"></i>
+                            <input type="password" id="teacherPassword" class="form-input" placeholder="Enter password" required>
+                        </div>
+                    </div>
+                    <span class="auth-hint">Demo Teacher Credentials: User ID: <code class="code-badge">TCH201</code> | Password: <code class="code-badge">pass123</code></span>
+                    
+                    <div class="modal-footer border-0 px-0 pb-0">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-right-to-bracket"></i> Login as Teacher
+                        </button>
+                    </div>
+                </form>
+
+                <!-- RIGHT SIDE BLUE ADMIN LOGIN FORM -->
+                <form id="adminLoginForm" class="auth-form hidden" onsubmit="handleLogin(event, 'admin')">
+                    <div class="admin-auth-header-box">
+                        <i class="fa-solid fa-shield-halved admin-shield-icon"></i>
+                        <div>
+                            <h4 class="text-white">Admin Management Login</h4>
+                            <p class="text-blue-200">Exclusive posting and notice management control.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="adminUserId">Admin User ID <span class="required">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-user-gear input-icon"></i>
+                            <input type="text" id="adminUserId" class="form-input" placeholder="Enter Admin User ID" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminPassword">Admin Password <span class="required">*</span></label>
+                        <div class="input-icon-wrap">
+                            <i class="fa-solid fa-key input-icon"></i>
+                            <input type="password" id="adminPassword" class="form-input" placeholder="Enter Admin Password" required>
+                        </div>
+                    </div>
+                    
+                    <div class="admin-credential-info">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Admin Credentials: User ID: <code class="code-badge">12345</code> | Password: <code class="code-badge">aaa</code></span>
+                    </div>
+
+                    <div class="modal-footer border-0 px-0 pb-0 mt-3">
+                        <button type="submit" class="btn btn-admin-blue btn-block">
+                            <i class="fa-solid fa-unlock-keyhole"></i> Unlock Admin Portal
+                        </button>
+                    </div>
+                </form>
+
+                <!-- CREATE NEW ACCOUNT FORM -->
+                <form id="registerForm" class="auth-form hidden" onsubmit="handleRegister(event)">
+                    <h4 class="form-section-title">Create New Account</h4>
+                    <p class="form-subtitle">Register as a Student or Teacher to access college notices.</p>
+
+                    <div class="form-group">
+                        <label for="regRole">Account Type <span class="required">*</span></label>
+                        <select id="regRole" class="form-select" required>
+                            <option value="student">Student Account</option>
+                            <option value="teacher">Teacher / Faculty Account</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label for="regName">Full Name <span class="required">*</span></label>
+                            <input type="text" id="regName" class="form-input" placeholder="e.g. Rahul Sharma" required>
+                        </div>
+                        <div class="form-group col-half">
+                            <label for="regUserId">User ID / Roll No <span class="required">*</span></label>
+                            <input type="text" id="regUserId" class="form-input" placeholder="e.g. STU999" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label for="regDepartment">Department</label>
+                            <select id="regDepartment" class="form-select">
+                                <option value="Computer Science (CSE)">Computer Science (CSE)</option>
+                                <option value="Electronics (ECE)">Electronics (ECE)</option>
+                                <option value="Electrical (EEE)">Electrical (EEE)</option>
+                                <option value="Mechanical (MECH)">Mechanical (MECH)</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="General Academic">General Academic</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label for="regPassword">Create Password <span class="required">*</span></label>
+                            <input type="password" id="regPassword" class="form-input" placeholder="Enter password" required>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-0 px-0 pb-0">
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i class="fa-solid fa-user-check"></i> Register Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- POST / EDIT NOTICE FORM MODAL (ADMIN ONLY) -->
+    <div class="modal-backdrop" id="noticeFormModal">
+        <div class="modal-card modal-md">
+            <div class="modal-header">
+                <h3 id="formModalTitle"><i class="fa-solid fa-pen-to-square"></i> Post College Notice</h3>
+                <button class="close-modal-btn" onclick="closeNoticeModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="noticeForm" onsubmit="saveNotice(event)">
+                <input type="hidden" id="noticeId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="formTitle">Notice Title <span class="required">*</span></label>
+                        <input type="text" id="formTitle" class="form-input" placeholder="e.g. Mid-Semester Examination Time Table Released" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label for="formCategory">Category <span class="required">*</span></label>
+                            <select id="formCategory" class="form-select" required>
+                                <option value="Academic & Exams">Academic & Exams</option>
+                                <option value="Placements & Internships">Placements & Internships</option>
+                                <option value="Events & Sports">Events & Sports</option>
+                                <option value="Library & Fees">Library & Fees</option>
+                                <option value="Urgent Campus Alerts">Urgent Campus Alerts</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half">
+                            <label for="formPriority">Priority Level <span class="required">*</span></label>
+                            <select id="formPriority" class="form-select" required>
+                                <option value="Normal">Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent (Live Ticker Alert)</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-half">
+                            <label for="formAudience">Target Audience</label>
+                            <select id="formAudience" class="form-select">
+                                <option value="All Students">All Students</option>
+                                <option value="Final Year Students">Final Year Students</option>
+                                <option value="CSE Department">CSE Department</option>
+                                <option value="ECE & EEE Dept">ECE & EEE Dept</option>
+                                <option value="Faculty & Staff">Faculty & Staff</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-half flex-align-end">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="formPinned">
+                                <span><i class="fa-solid fa-thumbtack"></i> Pin to Top Bulletin</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="formContent">Notice Description & Details <span class="required">*</span></label>
+                        <textarea id="formContent" class="form-textarea" rows="5" placeholder="Enter detailed notice information, instructions, timings, or location..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="formAttachment">Resource Link / PDF Attachment URL (Optional)</label>
+                        <input type="url" id="formAttachment" class="form-input" placeholder="https://college.edu/exam-timetable.pdf">
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary-outline" onclick="closeNoticeModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fa-solid fa-paper-plane"></i> Publish Notice
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- NOTICE DETAIL MODAL -->
+    <div class="modal-backdrop" id="detailModal">
+        <div class="modal-card modal-lg">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="badge" id="detailCategoryBadge">Category</span>
+                    <span class="badge" id="detailPriorityBadge">Priority</span>
+                    <span class="badge badge-outline" id="detailAudienceBadge">All Students</span>
+                </div>
+                <button class="close-modal-btn" onclick="closeDetailModal()">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h2 class="detail-title" id="detailTitle">Notice Title</h2>
+                <div class="detail-meta">
+                    <span><i class="fa-solid fa-calendar-day"></i> <span id="detailDate">Timestamp</span></span>
+                    <span><i class="fa-solid fa-eye"></i> <span id="detailViews">0</span> Views</span>
+                    <span><i class="fa-solid fa-circle-check"></i> <span id="detailAcks">0</span> Acknowledgments</span>
+                </div>
+                <hr class="modal-divider">
+                <div class="detail-content" id="detailContent"></div>
+                <div class="detail-attachment hidden" id="detailAttachmentWrap">
+                    <i class="fa-solid fa-paperclip"></i>
+                    <span>Attached Document / Link:</span>
+                    <a href="#" id="detailAttachmentLink" target="_blank" rel="noopener">Open Attachment</a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="ackNoticeBtn" onclick="acknowledgeCurrentNotice()">
+                    <i class="fa-solid fa-check"></i> Mark as Read (Acknowledge)
+                </button>
+                <button class="btn btn-secondary-outline" onclick="closeDetailModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
